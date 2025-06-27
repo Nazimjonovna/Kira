@@ -6,7 +6,7 @@ from rest_framework import status, generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import (Userserializer, DriverSerializer, PhoneSerializer, SMSCodeSerializer, 
                           ChangePasswordSerializer, VerifyCodeSerializer, ResetPasswordSerializer, 
-                          OrderSerializer, BrokerSerializer)
+                          OrderSerializer, BrokerSerializer, UserLoginSerializer)
 from .models import User, Driver, Validatedcode, Verification, Broker
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.parsers import MultiPartParser, FileUploadParser
@@ -236,23 +236,6 @@ class RegisterUserView(generics.CreateAPIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
-class CreateAccDriverView(APIView):
-    parser_classes = [MultiPartParser, FileUploadParser]
-    permission_class = [IsAuthenticated]
-    serializer_class = DriverSerializer
-
-    @swagger_auto_schema(request_body=DriverSerializer, tag = ['User'])
-    def post(self, request,  *args, **kwargs):
-        serializer = DriverSerializer(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({
-                "status":status.HTTP_200_OK,
-                "driver":serializer.data
-            })
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class ChangePasswordView(generics.UpdateAPIView):
 
@@ -332,14 +315,6 @@ class ResetPasswordConfirm(APIView):
         serializer = ResetPasswordSerializer(instance=user, data=request.data)
         if serializer.is_valid():
             ver = Verification.objects.get(phone=request.data['phone'])
-            print('Ver', ver.step_reset)
-            # if ver.step_reset == 'confirmed':
-            #     user.set_password(request.data['new_password'])
-            #     ver.step_reset = ''
-            #     ver.save()
-            #     user.save()
-            #     return Response({'message': 'Password successfully updated'}, status=status.HTTP_200_OK)
-            # return Response({'error': f'First get verify code, then reset password!'})
             user.set_password(request.data['new_password'])
             ver.step_reset = ''
             ver.save()
@@ -363,7 +338,7 @@ class AddOrderView(APIView):
     
 
 class RegisterBrokerView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = BrokerSerializer
     parser_classes = [MultiPartParser, FileUploadParser]
 
@@ -403,21 +378,26 @@ class BrokerListView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
 
-class RegisterDriveView(APIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = DriverSerializer
+
+class CreateAccDriverView(APIView):
     parser_classes = [MultiPartParser, FileUploadParser]
+    permission_classes = [AllowAny]
+    serializer_class = DriverSerializer
 
-    @swagger_auto_schema(request_body=DriverSerializer, tags=['Driver'])
-    def post(self, request, *args, **kwargs):
-        serializer = DriverSerializer(data=request.data)
+    @swagger_auto_schema(request_body=DriverSerializer, tag = ['User'])
+    def post(self, request,  *args, **kwargs):
+        serializer = DriverSerializer(data = request.data)
+        user = User.objects.filter(id=request.data['user'])
+        print(user)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response({
+                "status":status.HTTP_200_OK,
+                "driver":serializer.data
+            })
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)      
         
 
 class DriverListView(APIView):
@@ -448,3 +428,24 @@ class DriverListView(APIView):
         
         
 
+class UserLoginView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserLoginSerializer
+
+    @swagger_auto_schema(request_body=UserLoginSerializer, tags=['User'])
+    def post(self, request, *args, **kwargs):
+        phone = request.data.get('phone')
+        password = request.data.get('password')
+        user = User.objects.filter(phone__iexact=phone)
+        if user.exists():
+            user = user.first()
+            if check_password(password, user.password):
+                access_token = AccessToken().for_user(user)
+                refresh_token = RefreshToken().for_user(user)
+                return Response({
+                    'message': 'Login successful',
+                    "access": str(access_token),
+                    "refresh": str(refresh_token),
+                    "phone": str(user.phone),
+                })
+        return Response({'message': 'Login failed'}, status=status.HTTP_400_BAD_REQUEST)

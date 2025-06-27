@@ -30,6 +30,13 @@ class Userserializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
 
+
+class UserLoginSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('phone', 'password')
+        
+
 class DriverSerializer(serializers.ModelSerializer):
     class Meta:
         model = Driver
