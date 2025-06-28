@@ -236,6 +236,56 @@ class RegisterUserView(generics.CreateAPIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = Userserializer
+    parser_classes = [MultiPartParser, FileUploadParser]
+
+    def get(self, pk, request, *arg, **kwargs):
+        user = User.objects.filter(id = pk)
+        if user.exists():
+            serialiser = Userserializer(user, many = True)
+            return Response({
+                "user":serialiser.data,
+                "status":status.HTTP_200_OK
+            })
+        else:
+            return Response({
+                "message":'User not found',
+                "status":status.HTTP_200_OK
+            })
+        
+    def delete(self, pk, request):
+        user = User.objects.filter(id = pk)
+        if user.exists():
+            user.delete()
+            return Response({
+                "message":"User deleted Successfully",
+                "status":status.HTTP_200_OK
+            })
+        else:
+            return Response({
+                "message":'User not found',
+                "status":status.HTTP_200_OK
+            })
+        
+    @swagger_auto_schema(request_body=Userserializer, tags=["User"])
+    def patch(self, pk, request, *args, **kwargs):
+        user = User.objects.filter(id = pk)
+        if user.exists():
+            serializer = Userserializer(instanse = user, data =request.data, parial = True)
+            serializer.save()
+            return Response({
+                "user":serializer.data,
+                "status":status.HTTP_200_OK
+            })
+        else:
+            return Response({
+                "message":'User not found',
+                "status":status.HTTP_200_OK
+            })
+        
+
 
 class ChangePasswordView(generics.UpdateAPIView):
 
@@ -321,20 +371,6 @@ class ResetPasswordConfirm(APIView):
             user.save()
             return Response({'message': 'Password successfully updated'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-
-class AddOrderView(APIView):
-    permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FileUploadParser]
-    serializer_class = OrderSerializer
-
-    @swagger_auto_schema(request_body=OrderSerializer, tags=['Order'])
-    def post(self, request, *args, **kwargs):
-        serializer = OrderSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 class RegisterBrokerView(APIView):
@@ -345,11 +381,23 @@ class RegisterBrokerView(APIView):
     @swagger_auto_schema(request_body=BrokerSerializer, tags=['Broker'])
     def post(self, request, *args, **kwargs):
         serializer = BrokerSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        user = User.objects.filter(id=request.data['user'])
+        if user.exists():
+            if serializer.is_valid():
+                serializer.save()
+                access_token = AccessToken().for_user(user)
+                refresh_token = RefreshToken().for_user(user)
+                return Response({
+                    "status":status.HTTP_200_OK,
+                    "broker":serializer.data,
+                    "access": str(access_token),
+                    "refresh": str(refresh_token),
+                    "phone": str(user.phone),
+                })
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
         
 
 class BrokerListView(APIView):
@@ -358,15 +406,20 @@ class BrokerListView(APIView):
     parser_classes = [MultiPartParser, FileUploadParser]
 
     # @swagger_auto_schema(request_body=BrokerSerializer, tags=['Broker'])
-    def get(self, request, *args, **kwargs):
-        brokers = Broker.objects.all()
-        serializer = BrokerSerializer(brokers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK) 
+    def get(self, pk, request, *args, **kwargs):
+        broker = Broker.objects.filter(id = pk)
+        user = User.objects.filter(id=broker.user)
+        serializer = BrokerSerializer(broker, many=True)
+        serialiser_user = Userserializer(user, many=True)
+        return Response({'broker' : str(serializer.data),
+                         "user" : str(serialiser_user.data),
+                          'status':str(status=status.HTTP_200_OK)}) 
     
-    @swagger_auto_schema(request_body=BrokerSerializer, tags=['Broker'])
     def delete(self, request, *args, **kwargs):
         broker = Broker.objects.get(id=kwargs['pk'])
+        user = User.objects.filter(id=broker.user.id)
         broker.delete()
+        user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
     @swagger_auto_schema(request_body=BrokerSerializer, tags=['Broker'])
@@ -385,35 +438,47 @@ class CreateAccDriverView(APIView):
     permission_classes = [AllowAny]
     serializer_class = DriverSerializer
 
-    @swagger_auto_schema(request_body=DriverSerializer, tag = ['User'])
+    @swagger_auto_schema(request_body=DriverSerializer, tag = ['Driver'])
     def post(self, request,  *args, **kwargs):
         serializer = DriverSerializer(data = request.data)
         user = User.objects.filter(id=request.data['user'])
-        print(user)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({
-                "status":status.HTTP_200_OK,
-                "driver":serializer.data
-            })
+        if user.exists():
+            if serializer.is_valid():
+                serializer.save()
+                access_token = AccessToken().for_user(user)
+                refresh_token = RefreshToken().for_user(user)
+                return Response({
+                    "status":status.HTTP_200_OK,
+                    "driver":serializer.data,
+                    "access": str(access_token),
+                    "refresh": str(refresh_token),
+                    "phone": str(user.phone),
+                })
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)      
-        
+            return Response({'message': 'User not found'}, status=status.HTTP_400_BAD_REQUEST)
+            
 
 class DriverListView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = DriverSerializer
     parser_classes = [MultiPartParser, FileUploadParser]
 
-    def get(self, request, *args, **kwargs):
-        drivers = Driver.objects.all()
-        serializer = DriverSerializer(drivers, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK) 
-    
-    @swagger_auto_schema(request_body=DriverSerializer, tags=['Driver'])    
+    def get(self, pk, request, *args, **kwargs):
+        driver = Driver.objects.filter(id=pk)
+        user = User.objects.get(id=driver.user)
+        serializer = DriverSerializer(driver, many=True)
+        serialiser_user = Userserializer(user, many=True)
+        return Response({'driver' : str(serializer.data),
+                         "user" : str(serialiser_user.data),
+                          'status':str(status=status.HTTP_200_OK)}) 
+        
     def delete(self, request, *args, **kwargs):
         driver = Driver.objects.get(id=kwargs['pk'])
+        user = User.objects.filter(id=driver.user.id)
         driver.delete()
+        user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
     @swagger_auto_schema(request_body=DriverSerializer, tags=['Driver'])
@@ -449,3 +514,18 @@ class UserLoginView(APIView):
                     "phone": str(user.phone),
                 })
         return Response({'message': 'Login failed'}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+class AddOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FileUploadParser]
+    serializer_class = OrderSerializer
+
+    @swagger_auto_schema(request_body=OrderSerializer, tags=['Order'])
+    def post(self, request, *args, **kwargs):
+        serializer = OrderSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
