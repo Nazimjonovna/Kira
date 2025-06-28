@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import (Userserializer, DriverSerializer, PhoneSerializer, SMSCodeSerializer, 
                           ChangePasswordSerializer, VerifyCodeSerializer, ResetPasswordSerializer, 
                           OrderSerializer, BrokerSerializer, UserLoginSerializer)
-from .models import User, Driver, Validatedcode, Verification, Broker
+from .models import User, Driver, Validatedcode, Verification, Broker, Order
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.parsers import MultiPartParser, FileUploadParser
 from drf_yasg.utils import swagger_auto_schema
@@ -152,6 +152,7 @@ class codeView(APIView):
 
 
 class ValidatedcodeView(APIView):
+    @swagger_auto_schema(tags=['User'])
     def post(self, request, *args, **kwargs):
         phone = request.data.get('phone', False)
         code_sent = request.data.get('code', False)
@@ -241,6 +242,7 @@ class UserDetailView(APIView):
     serializer_class = Userserializer
     parser_classes = [MultiPartParser, FileUploadParser]
 
+    @swagger_auto_schema(tags=['User'])
     def get(self, pk, request, *arg, **kwargs):
         user = User.objects.filter(id = pk)
         if user.exists():
@@ -254,7 +256,8 @@ class UserDetailView(APIView):
                 "message":'User not found',
                 "status":status.HTTP_200_OK
             })
-        
+
+    @swagger_auto_schema(tags=['User'])    
     def delete(self, pk, request):
         user = User.objects.filter(id = pk)
         if user.exists():
@@ -292,9 +295,8 @@ class ChangePasswordView(generics.UpdateAPIView):
     queryset = User.objects.all()
     permission_classes = (IsAuthenticated,)
     serializer_class = ChangePasswordSerializer
-    my_tags = ['Change-Password']
 
-    @swagger_auto_schema(request_body=ChangePasswordSerializer)
+    @swagger_auto_schema(request_body=ChangePasswordSerializer, tags = ['User'])
     def put(self, request, *args, **kwargs):
         serializer = ChangePasswordSerializer(instance=self.request.user, data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -307,7 +309,7 @@ class VerifyCodeView(APIView):
     permission_classes = [AllowAny]
     queryset = Verification.objects.all()
 
-    @swagger_auto_schema(request_body=VerifyCodeSerializer, tags=['Password-Reset'])
+    @swagger_auto_schema(request_body=VerifyCodeSerializer, tags=['User'])
     def put(self, request, *args, **kwargs):
         data = request.data
         try:
@@ -331,9 +333,8 @@ class VerifyCodeView(APIView):
 class ResetPasswordView(APIView):
     permission_classes = [AllowAny]
     serializer_class = PhoneSerializer
-    my_tags = ['Password-Reset']
 
-    @swagger_auto_schema(request_body=PhoneSerializer, tags=['Password-Reset'])
+    @swagger_auto_schema(request_body=PhoneSerializer, tags=['User'])
     def post(self, request):
         data = request.data
         if data.get('phone'):
@@ -348,14 +349,14 @@ class ResetPasswordView(APIView):
 
 
 class ResetPasswordVerifyCode(VerifyCodeView):
-    my_tags = ['Password-Reset']
+    my_tags = ['User']
 
 
 class ResetPasswordConfirm(APIView):
     permission_classes = [AllowAny]
     serializer_class = ResetPasswordSerializer
 
-    @swagger_auto_schema(request_body=ResetPasswordSerializer, tags=['Password-Reset'])
+    @swagger_auto_schema(request_body=ResetPasswordSerializer, tags=['User'])
     def put(self, request, *args, **kwargs):
         try:
             user = User.objects.get(phone=request.data['phone'])
@@ -405,7 +406,7 @@ class BrokerListView(APIView):
     serializer_class = BrokerSerializer
     parser_classes = [MultiPartParser, FileUploadParser]
 
-    # @swagger_auto_schema(request_body=BrokerSerializer, tags=['Broker'])
+    @swagger_auto_schema(tags=['Broker'])
     def get(self, pk, request, *args, **kwargs):
         broker = Broker.objects.filter(id = pk)
         user = User.objects.filter(id=broker.user)
@@ -415,6 +416,7 @@ class BrokerListView(APIView):
                          "user" : str(serialiser_user.data),
                           'status':str(status=status.HTTP_200_OK)}) 
     
+    @swagger_auto_schema(tags=['Broker'])
     def delete(self, request, *args, **kwargs):
         broker = Broker.objects.get(id=kwargs['pk'])
         user = User.objects.filter(id=broker.user.id)
@@ -438,7 +440,7 @@ class CreateAccDriverView(APIView):
     permission_classes = [AllowAny]
     serializer_class = DriverSerializer
 
-    @swagger_auto_schema(request_body=DriverSerializer, tag = ['Driver'])
+    @swagger_auto_schema(request_body=DriverSerializer, tags = ['Driver'])
     def post(self, request,  *args, **kwargs):
         serializer = DriverSerializer(data = request.data)
         user = User.objects.filter(id=request.data['user'])
@@ -465,6 +467,7 @@ class DriverListView(APIView):
     serializer_class = DriverSerializer
     parser_classes = [MultiPartParser, FileUploadParser]
 
+    @swagger_auto_schema(tags=['Driver'])
     def get(self, pk, request, *args, **kwargs):
         driver = Driver.objects.filter(id=pk)
         user = User.objects.get(id=driver.user)
@@ -474,6 +477,7 @@ class DriverListView(APIView):
                          "user" : str(serialiser_user.data),
                           'status':str(status=status.HTTP_200_OK)}) 
         
+    @swagger_auto_schema(tags=['Driver'])
     def delete(self, request, *args, **kwargs):
         driver = Driver.objects.get(id=kwargs['pk'])
         user = User.objects.filter(id=driver.user.id)
@@ -529,3 +533,62 @@ class AddOrderView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class OrderDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FileUploadParser]
+    serializer_class = OrderSerializer
+
+    @swagger_auto_schema(tags=['Order'])
+    def get(self, pk, request, *args, **kwargs):
+        order = Order.objects.filter(id = pk)
+        if order.exists():
+            serializer = OrderSerializer(order)
+            return Response({
+                "order":serializer.data,
+                "status":status.HTTP_200_OK
+            })
+        else:
+            return Response({
+                "message":"Order not found",
+                "status":status.HTTP_200_OK
+            })
+
+    @swagger_auto_schema(tags=['Order']) 
+    def delete(self, pk, request):
+        order = Order.objects.filter(id = pk)
+        if order.exists():
+            order.delete()
+            return Response({
+                "message":"Order deleted successfully",
+                "status":status.HTTP_200_OK
+            })
+        else:
+            return Response({
+                "message":"Order not found",
+                "status":status.HTTP_200_OK
+            })
+        
+    @swagger_auto_schema(request_body=OrderSerializer, tags=['Order'])
+    def patch(self, pk, request, *args, **kwargs):
+        order = Order.objects.filter(id = pk)
+        if order.exists():
+            serializer = OrderSerializer(instanse = order, data = request.data, partial = True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({
+                    "order":serializer.data,
+                    "status":status.HTTP_200_OK,
+                    'messege':'order updated successfully'
+                })
+            else:
+                return Response ({
+                    'error':serializer.errors,
+                    'status':status.HTTP_200_OK
+                })
+        else:
+            return Response({
+                    'messege':'order not found',
+                    'status':status.HTTP_200_OK
+            })
