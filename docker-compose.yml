@@ -13,14 +13,14 @@ services:
     depends_on:
       - db
 
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: Kira
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 0200
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
+  # db:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: Kira
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: 0200
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
 
 volumes:
   postgres_data:
