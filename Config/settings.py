@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # importing apps
     'rest_framework',
+    'corsheaders',
     'drf_yasg',
 
     #my apps
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -159,3 +161,12 @@ SWAGGER_SETTINGS = {
     },
     'USE_SESSION_AUTH': False,  # This hides the username/password login in Swagger UI
 }
+
+
+CORS_ALLOWED_ORIGINS = [
+    "https://myfrontend.onrender.com",
+    "https://www.myfrontend.com",  # if you have a custom domain
+    "*",
+]
+
+CORS_ALLOW_CREDENTIALS = True
