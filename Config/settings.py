@@ -163,10 +163,6 @@ SWAGGER_SETTINGS = {
 }
 
 
-CORS_ALLOWED_ORIGINS = [
-    "https://myfrontend.onrender.com",
-    "https://www.myfrontend.com",  # if you have a custom domain
-    "*",
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
