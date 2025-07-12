@@ -63,7 +63,7 @@ class PhoneView(APIView):
 
     @swagger_auto_schema(request_body=PhoneSerializer, tags = ['Register'])
     def post(self, request, *args, **kwargs):
-        phone_number = request.data.get("phone")
+        phone_number = str(request.data.get("phone"))
         if phone_number.isdigit() and len(phone_number)>8:
             user = User.objects.filter(phone__iexact=phone_number)
             if user.exists():

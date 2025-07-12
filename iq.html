@@ -1,0 +1,59 @@
+// React component: Instagram Onboarding Flow for IQ App
+import { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+
+export default function InstagramOnboarding() {
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState('');
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (step === 1) setProgress(20);
+    else if (step === 2) setProgress(50);
+    else if (step === 3) setProgress(100);
+  }, [step]);
+
+  const handleNext = () => setStep(step + 1);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 to-blue-200 p-6">
+      <Card className="w-full max-w-md p-6 shadow-xl rounded-2xl">
+        <CardContent className="space-y-6">
+          <Progress value={progress} className="h-2 bg-blue-100" />
+
+          {step === 1 && (
+            <>
+              <h2 className="text-xl font-semibold text-center">🎉 Xush kelibsiz, Instagram'dan keldingiz!</h2>
+              <p className="text-center text-sm">Siz uchun maxsus test tayyorlab qo‘yilgan.</p>
+              <Button onClick={handleNext} className="w-full bg-blue-500 hover:bg-blue-600">Boshlaymiz</Button>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <h2 className="text-lg font-semibold">Ismingizni kiriting:</h2>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full border rounded-xl p-2 text-sm"
+                placeholder="Masalan: Shaxlo"
+              />
+              <Button onClick={handleNext} className="w-full bg-green-500 hover:bg-green-600 mt-4">Davom etish</Button>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <h2 className="text-lg font-semibold">🎓 Sizga mos test tayyor!</h2>
+              <p className="text-sm text-center">"{name || 'Foydalanuvchi'}", bu test siz haqingizda 4 daqiqa ichida 3 ta haqiqatni ochib beradi.</p>
+              <Button className="w-full bg-purple-600 hover:bg-purple-700 mt-4">IQ Testni boshlash</Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
