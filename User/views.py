@@ -6,7 +6,8 @@ from rest_framework import status, generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .serializers import (Userserializer, DriverSerializer, PhoneSerializer, SMSCodeSerializer, 
                           ChangePasswordSerializer, VerifyCodeSerializer, ResetPasswordSerializer, 
-                          OrderSerializer, BrokerSerializer, UserLoginSerializer)
+                          OrderSerializer, BrokerSerializer, UserLoginSerializer,
+                          FilterOrderSerializer)
 from .models import User, Driver, Validatedcode, Verification, Broker, Order
 from django.contrib.auth.hashers import make_password, check_password
 from rest_framework.parsers import MultiPartParser, FileUploadParser
@@ -592,3 +593,30 @@ class OrderDetailView(APIView):
                     'messege':'order not found',
                     'status':status.HTTP_200_OK
             })
+        
+
+class FilterOrderView(APIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = FilterOrderSerializer
+
+    def post(self, request, *args, **kwargs):
+        orders = []
+        from_place = request.data['from_place']
+        to_place = request.data['to_place']
+        orders_from = Order.objects.filter(from_place = from_place)
+        order_to = Order.objects.filter(to_place = to_place)
+        if order_to.status == "pending" and orders_from.status == "pending":
+            orders.append(orders_from)
+            orders.append(orders_from)
+            serializer = OrderSerializer(orders, many = True)
+            return Response({
+                "msg": "Saralangan buyurtmalar",
+                "orders":serializer.data,
+                "status":status.HTTP_200_OK
+            })
+        else:
+            return Response({
+                "msg":"Bunday manzil bo'yicha buyurtmalar topilmadi",
+                "status":status.HTTP_200_OK
+            })
+        

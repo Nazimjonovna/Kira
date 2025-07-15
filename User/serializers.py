@@ -109,6 +109,13 @@ class VerifyCodeSerializer(serializers.ModelSerializer):
             return instance
         else:
             raise serializers.ValidationError({'error': 'Phone number or verify code incorrect'})
+        
+
+class BrokerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Broker
+        fields = '__all__'
+
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -117,7 +124,6 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
         
 
-class BrokerSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Broker
-        fields = '__all__'
+class FilterOrderSerializer(serializers.Serializer):
+    from_place = serializers.CharField()
+    to_place = serializers.CharField()

@@ -26,6 +26,7 @@ Destiny = [
         ('Nukus', 'Nukus')
 ]
 
+
 OrderStatus = [
     ('pending', 'pending'),
     ('accepted', 'accepted'),
@@ -34,16 +35,27 @@ OrderStatus = [
     ('cancelled', 'cancelled'),
 ]
 
+
 Status = [
     ('sinuvchan', 'sinuvchan'),
     ('yonuvchan', 'yonuvchan'),
 ]
+
 
 Types = [
     ('shipper', 'shippper'),
     ('broker', 'broker'),
     ('carier', 'carier')
 ]
+
+
+class Rate(models.IntegerChoices):
+    "1" = 1
+    "2" = 2
+    "3" = 3
+    "4" = 4
+    "5" = 5
+
 
 class User(models.Model):
     phone = models.CharField(max_length=255, unique=True, validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")])
@@ -115,6 +127,7 @@ class Driver(models.Model):
     card_number = models.IntegerField()
     card_period = models.IntegerField()
     telegram_nik = models.TextField()
+    rate = models.IntegerChoices(choices = Rate)
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -160,9 +173,20 @@ class Broker(models.Model):
     company_logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
     company_description = models.TextField()
     company_website = models.URLField()
+    rate = models.IntegerChoices(choices = Rate)
     drivers = models.ManyToManyField(Driver, related_name='brokers')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.user.first_name + " " + self.user.last_name
+    
+
+class Contract(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    company = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateField(auto_now=True)
+    price = models.FloatField()
+    status = models.CharField(choices=OrderStatus)
+    description = models.TextField()
+    rate = models.IntegerChoices(choices = Rate)

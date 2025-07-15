@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (PhoneView, codeView, ValidatedcodeView, RegisterUserView, CreateAccDriverView, ChangePasswordView, 
                     VerifyCodeView, ResetPasswordView, ResetPasswordVerifyCode, ResetPasswordConfirm,
                     CreateAccDriverView, AddOrderView, RegisterBrokerView, BrokerListView, DriverListView,
-                    UserLoginView, UserDetailView, OrderDetailView)    
+                    UserLoginView, UserDetailView, OrderDetailView, FilterOrderView)    
 
 urlpatterns = [
     path('phone/', PhoneView.as_view(), name='phone'),
@@ -20,5 +20,6 @@ urlpatterns = [
     path('reset-password-verify-code/', ResetPasswordVerifyCode.as_view(), name='reset-password-verify-code'),
     path('reset-password-confirm/', ResetPasswordConfirm.as_view(), name='reset-password-confirm'),
     path('order/', AddOrderView.as_view(), name='order'),
-    path('order/update/<int:pk>/', OrderDetailView.as_view())
+    path('order/update/<int:pk>/', OrderDetailView.as_view()),
+    path("order/filter/", FilterOrderView.as_view()),
 ]
