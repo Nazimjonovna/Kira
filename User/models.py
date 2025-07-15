@@ -49,12 +49,13 @@ Types = [
 ]
 
 
-class Rate(models.IntegerChoices):
-    "1" = 1
-    "2" = 2
-    "3" = 3
-    "4" = 4
-    "5" = 5
+Rate = [
+    ("1" , 1),
+    ("2" , 2),
+    ("3" , 3),
+    ("4" , 4),
+    ("5" , 5)
+]
 
 
 class User(models.Model):
