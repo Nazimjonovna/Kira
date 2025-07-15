@@ -183,11 +183,11 @@ class Broker(models.Model):
         return self.user.first_name + " " + self.user.last_name
     
 
-class Contract(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    company = models.ForeignKey(User, on_delete=models.CASCADE)
-    date = models.DateField(auto_now=True)
-    price = models.FloatField()
-    status = models.CharField(choices=OrderStatus)
-    description = models.TextField()
-    rate = models.IntegerField()
+# class Contract(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#     company = models.ForeignKey(User, on_delete=models.CASCADE)
+#     date = models.DateField(auto_now=True)
+#     price = models.FloatField()
+#     status = models.CharField(choices=OrderStatus)
+#     description = models.TextField()
+#     rate = models.IntegerField()
