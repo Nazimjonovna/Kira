@@ -59,7 +59,7 @@ Rate = [
 
 
 class User(models.Model):
-    phone = models.CharField(max_length=255, unique=True, validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")])
+    phone = models.CharField(max_length=255, null=True, validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")]) #unique=True,
     first_name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
     email = models.EmailField(unique=True, null=True, blank=True)  
@@ -73,7 +73,7 @@ class User(models.Model):
     pasport = models.FileField(upload_to="pasports/", null=True, blank=True)
     password = models.CharField(max_length=255, null=True, blank=True)
     pasport_seria = models.CharField(max_length=200, null=True, blank=True)
-    is_who = models.CharField(max_length=200, choices=Types)
+    is_who = models.CharField(max_length=200, choices=Types, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
