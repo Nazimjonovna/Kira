@@ -73,7 +73,7 @@ class User(models.Model):
     pasport = models.FileField(upload_to="pasports/", null=True, blank=True)
     password = models.CharField(max_length=255, null=True, blank=True)
     pasport_seria = models.CharField(max_length=200, null=True, blank=True)
-    is_who = models.CharField(max_length=200, choices=Types, null=True, blank=True)
+    is_who = models.CharField(max_length=200, choices=Types)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
