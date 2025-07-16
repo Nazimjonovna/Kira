@@ -20,6 +20,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+import traceback
 
 
 
@@ -189,9 +190,11 @@ class RegisterUserView(generics.CreateAPIView):
 
     @swagger_auto_schema(request_body=Userserializer, tags=['User'])
     def post(self, request):
+        
         try:
             serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
+                user_obj = serializer.save()
                 phone = serializer.validated_data.get('phone')
                 password = serializer.validated_data.get('password')
                 code = serializer.validated_data.get('code')
@@ -215,7 +218,7 @@ class RegisterUserView(generics.CreateAPIView):
 
                 hashed_password = make_password(password)
                 user_obj = User.objects.create(phone=phone, password=hashed_password, code=code, first_name=first_name,
-                                               gender=gender, birth_date=birth_date, address=address,
+                                               gender=gender, birth_date=birth_date, address=address, last_name = last_name,
                                                city=city, country=country, postal_code=postal_code,
                                                pasport=pasport, pasport_seria=pasport_seria, is_who=is_who)
 

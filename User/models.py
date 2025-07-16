@@ -62,7 +62,7 @@ class User(models.Model):
     phone = models.CharField(max_length=255, null=True, validators=[RegexValidator(regex=r'^\+?1?\d{9,15}$', message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed.")]) #unique=True,
     first_name = models.CharField(max_length=255, null=True, blank=True)
     last_name = models.CharField(max_length=255, null=True, blank=True)
-    email = models.EmailField(unique=True, null=True, blank=True)  
+    email = models.CharField(max_length=255, null=True, blank=True)  
     gender = models.CharField(max_length=255, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)
     code = models.CharField(max_length=255, blank=True, null=True)
